@@ -99,3 +99,9 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# Mac-specific file
+.DS_Store
+
+# Only useful for online Udacity GPU-enabled workspace
+workspace_utils.py
