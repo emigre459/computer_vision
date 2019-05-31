@@ -105,3 +105,6 @@ ENV/
 
 # Only useful for online Udacity GPU-enabled workspace
 workspace_utils.py
+
+data/
+Part 8 - Transfer Learning (Exercises).ipynb
