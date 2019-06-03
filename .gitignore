@@ -108,3 +108,7 @@ workspace_utils.py
 
 data/
 Part 8 - Transfer Learning (Exercises).ipynb
+
+# Model checkpoint is too big for GitHub
+# How to track in git without worrying about GitHub errors?
+# checkpoint.pth
