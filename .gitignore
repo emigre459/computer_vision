@@ -110,4 +110,4 @@ data/
 Part 8 - Transfer Learning (Exercises).ipynb
 
 # Model checkpoint is too big for GitHub
-checkpoint.pth
+model_checkpoints/
