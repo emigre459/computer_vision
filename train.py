@@ -1,6 +1,16 @@
-# -------------------- SETUP MAJOR INPUT VALUES --------------------
+# -------------------- IMPORT PACKAGES --------------------
 
 import argparse
+import os
+from copy import deepcopy
+import time
+
+import torch
+from torch import nn, optim
+from torchvision import datasets, transforms, models
+
+
+# -------------------- SETUP MAJOR INPUT VALUES --------------------
 
 # Setup major inputs required from command line
 parser = argparse.ArgumentParser(description='Trains a neural network')
@@ -16,7 +26,7 @@ parser.add_argument('-s', '--save_dir', type=str,
     should be stored')
 
 parser.add_argument('-a', '--arch', type=str, 
-    default = 'inception_v3', 
+    default = 'inception', 
     help = 'Pre-trained model from torchivision.models to use \
     for the feature detector layers of your model')
 
@@ -39,8 +49,77 @@ parser.add_argument('-d', '--dropout', type=bool,
 
 args = parser.parse_args()
 
+
+# -------------------- ARCHITECTURE-SPECIFIC SETUP --------------------
+# Sets parameters for various items that are not model-architecture-agnostic
+
+# torchvision.models.inception_v3()
+if args.arch == 'inception':
+    crop_size = 299
+    models.inception_v3(pretrained=True)
+    classifier = model.fc
+    input_nodes = 2048
+
+
+elif args.arch == 'densenet': 
+    crop_size = 224
+    models.densenet161(pretrained=True)
+    classifier = model.classifier
+    input_nodes = 2208
+
+else:
+    print("An unsupported model architecture was supplied. Program terminating...")
+    exit()
+
+
 # -------------------- DATA LOADING AND TRANSFORMATIONS --------------------
 # Initial transformations for cropping should be dictated by 
 # model architecture chosen (resize should always be the same 512)
+
+# Means and stdevs common for pre-trained networks
+means = [0.485, 0.456, 0.406]
+stdevs = [0.229, 0.224, 0.225]
+
+
+# -------------------- CLASSIFIER BUILDING --------------------
+# Build classifier portion of convolutional neural net to replace
+# original ImageNet classifier
+
+
+
+
+# -------------------- CLASSIFIER BUILDING --------------------
+
+
+
+
+
+# -------------------- START EPOCHS --------------------
+
+
+
+    # -------------------- TRAINING --------------------
+
+
+
+
+    # -------------------- VALIDATION --------------------
+
+
+    
+
+
+# -------------------- END EPOCHS --------------------
+
+
+
+
+
+# -------------------- TESTING --------------------
+
+
+
+# -------------------- SAVING THE MODEL --------------------
+
 
 
