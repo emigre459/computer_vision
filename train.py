@@ -57,14 +57,14 @@ args = parser.parse_args()
 if args.arch == 'inception':
     crop_size = 299
     model = models.inception_v3(pretrained=True)
-    classifier = model.fc
+    #classifier = model.fc
     input_nodes = 2048
 
 
 elif args.arch == 'densenet': 
     crop_size = 224
     model = models.densenet161(pretrained=True)
-    classifier = model.classifier
+    #classifier = model.classifier
     input_nodes = 2208
 
 else:
@@ -124,14 +124,29 @@ dataloaders['train'] = torch.utils.data.DataLoader(data[phase],
 # -------------------- CLASSIFIER BUILDING --------------------
 # Build classifier portion of convolutional neural net to replace
 # original ImageNet classifier
+classifier = nn.Sequential()
+nodes = args.hidden_units
+
+classifier.add_module('hidden1', nn.Linear(input_nodes, nodes[0]))
+
+for i, _ in enumerate(nodes):
+    if i+1 >= len(nodes): break
+
+    classifier.add_module('activation' + str(i+1), nn.ReLU())
+    if args.dropout: classifier.add_module('dropout' + str(i+1), 
+        nn.Dropout(0.2))
+    classifier.add_module('hidden' + str(i+2), nn.Linear(nodes[i], nodes[i+1]))
+
+classifier.add_module('activation' + str(i+1), nn.ReLU())
+classifier.add_module('output', nn.Linear(nodes[-1], 102))
+classifier.add_module('activation_output', nn.LogSoftmax(dim=1))
 
 
+if arch == 'inception':
+    model.fc = classifier
 
-
-# -------------------- CLASSIFIER BUILDING --------------------
-
-
-
+elif arch == 'densenet':
+    model.classifier = classifier
 
 
 # -------------------- START EPOCHS --------------------
