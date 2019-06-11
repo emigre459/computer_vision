@@ -56,20 +56,25 @@ args = parser.parse_args()
 # torchvision.models.inception_v3()
 if args.arch == 'inception':
     crop_size = 299
-    models.inception_v3(pretrained=True)
+    model = models.inception_v3(pretrained=True)
     classifier = model.fc
     input_nodes = 2048
 
 
 elif args.arch == 'densenet': 
     crop_size = 224
-    models.densenet161(pretrained=True)
+    model = models.densenet161(pretrained=True)
     classifier = model.classifier
     input_nodes = 2208
 
 else:
     print("An unsupported model architecture was supplied. Program terminating...")
     exit()
+
+
+# Freeze parameters so we don't backprop through the pre-trained feature detector
+for param in model.parameters():
+    param.requires_grad = False
 
 
 # -------------------- DATA LOADING AND TRANSFORMATIONS --------------------
@@ -79,6 +84,41 @@ else:
 # Means and stdevs common for pre-trained networks
 means = [0.485, 0.456, 0.406]
 stdevs = [0.229, 0.224, 0.225]
+
+data_dir = 'data/'
+
+# Code here adapted from https://pytorch.org/tutorials/beginner/transfer_learning_tutorial.html
+
+image_transforms = {'train': transforms.Compose([transforms.RandomResizedCrop(crop_size),
+    transforms.ColorJitter(brightness=0.15, 
+        contrast=0.15, 
+        saturation=0.15, 
+        hue=0),
+    transforms.RandomAffine(30),
+    transforms.RandomVerticalFlip(),
+    transforms.ToTensor(),
+    transforms.Normalize(means, stdevs)]),
+'validation': transforms.Compose([transforms.Resize(512),
+    transforms.CenterCrop(crop_size),
+    transforms.ToTensor(),
+    transforms.Normalize(means, stdevs)]),
+'test': transforms.Compose([transforms.Resize(512),
+    transforms.CenterCrop(crop_size),
+    transforms.ToTensor(),
+    transforms.Normalize(means, stdevs)])
+}
+
+phases = ['train', 'validation', 'test']
+
+data = {phase: datasets.ImageFolder(os.path.join(data_dir, phase),
+    image_transforms[phase]) for phase in phases}
+
+dataloaders = {phase: torch.utils.data.DataLoader(data[phase], 
+    batch_size=64) for phase in phases}
+
+# Set training dataloader to have shuffle = True
+dataloaders['train'] = torch.utils.data.DataLoader(data[phase], 
+    batch_size=64, shuffle = True)
 
 
 # -------------------- CLASSIFIER BUILDING --------------------
@@ -106,7 +146,7 @@ stdevs = [0.229, 0.224, 0.225]
     # -------------------- VALIDATION --------------------
 
 
-    
+
 
 
 # -------------------- END EPOCHS --------------------
