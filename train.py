@@ -393,7 +393,11 @@ for e in existing_chkpts:
     if m:
         file_indices.append(int(m.group(1)))
 
-file_n = max(file_indices)
+# Check that there are any files of proper name scheme in there at all
+if file_indices:
+    file_n = max(file_indices)
+else:
+    file_n = 0
 
 save_path = args.save_dir + 'checkpoint' + str(file_n) + '.pth'
 torch.save(checkpoint, save_path)
