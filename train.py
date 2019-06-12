@@ -79,11 +79,13 @@ elif args.arch == 'densenet':
     input_nodes = 2208
 
 else:
-    print("An unsupported model architecture was supplied. Program terminating...")
+    print("An unsupported model architecture was supplied. \
+        Program terminating...")
     exit()
 
 
-# Freeze parameters so we don't backprop through the pre-trained feature detector
+# Freeze parameters so we don't backprop through the pre-trained 
+# feature detector
 for param in model.parameters():
     param.requires_grad = False
 
@@ -100,7 +102,8 @@ data_dir = args.data_directory
 
 # Code here adapted from https://pytorch.org/tutorials/beginner/transfer_learning_tutorial.html
 
-image_transforms = {'train': transforms.Compose([transforms.RandomResizedCrop(crop_size),
+image_transforms = {'train': \
+transforms.Compose([transforms.RandomResizedCrop(crop_size),
     transforms.ColorJitter(brightness=0.15, 
         contrast=0.15, 
         saturation=0.15, 
@@ -233,7 +236,6 @@ for e in epoch_iter:
         training_batch_counter == (len(dataloaders['train']) - 1):
             print(f"Training batch {training_batch_counter}\nLoss = \
             {training_loss/(training_batch_counter + 1)}\n")
-            break
             
         training_batch_counter += 1
 
@@ -243,7 +245,8 @@ for e in epoch_iter:
     # turn off gradients for speedup in validation
     with torch.no_grad():
 
-        # set model to evaluation mode and remove un-needed things like Dropout layers
+        # set model to evaluation mode and remove un-needed things 
+        # like Dropout layers
         model.eval()
       
         accuracy = 0
@@ -270,7 +273,6 @@ for e in epoch_iter:
                 print(f"Validation batch {val_batch_counter}\nLoss = \
                       {valid_loss/(val_batch_counter + 1)}\n and \
                       accuracy = {accuracy/(val_batch_counter + 1)}\n")
-                break
             
             val_batch_counter += 1
 
@@ -295,8 +297,8 @@ for e in epoch_iter:
         best['epoch'] = e+1
         best['weights'] = deepcopy(model.state_dict())
         
-        print("Best accuracy updated this epoch to {}\n\n\n".format(best['acc']))
-    break
+        print("Best accuracy updated this epoch \
+            to {}\n\n\n".format(best['acc']))
 
 # -------------------- END EPOCHS --------------------
 
@@ -336,8 +338,6 @@ with torch.no_grad():
 
         test_loss += loss.item()
         test_accuracy += torch.mean(equals.type(torch.FloatTensor)).item()
-        break
-
 
 
 # Note that normalizing to train/validloader length is due to need to 
@@ -363,7 +363,8 @@ checkpoint = {'arch': model_arch,
               'validation_loss': valid_loss,
               'opt_state': optimizer.state_dict(),
               'class_to_idx': data['train'].class_to_idx,
-              'idx_to_class': {v: k for k,v in data['train'].class_to_idx.items()}}
+              'idx_to_class': {v: k for k,v \
+              in data['train'].class_to_idx.items()}}
 
 
 # Determine the highest number X among the existing checkpoints
@@ -381,9 +382,10 @@ existing_chkpts = [f for f in listdir(args.save_dir) \
 # Code adapted from 
 # https://stackoverflow.com/questions/4666973/how-to-extract-the-substring-between-two-markers
 
-# Take list of existing checkpoint filenames and generate string "checkpointn+1"
-# where n is the highest value used for checkpoint filenames
-# Guarantees we won't overwrite an existing checkpoint
+# Take list of existing checkpoint filenames and 
+# generate string "checkpointn+1" where n is the highest 
+# value used for checkpoint filenames. Guarantees we won't 
+# overwrite an existing checkpoint
 import re
 
 file_indices = []
