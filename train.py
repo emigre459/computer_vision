@@ -3,7 +3,7 @@
 import argparse
 import os
 from copy import deepcopy
-import time
+from time import time
 
 import torch
 from torch import nn, optim
@@ -45,6 +45,14 @@ parser.add_argument('-d', '--dropout', type=bool,
     default = True, 
     help = 'Determines if dropout with p=0.2 will be used for \
     each hidden layer')
+
+parser.add_argument('-e', '--epochs', type=int, 
+    default = 30, 
+    help = 'Number of epochs to use for training and validation')
+
+parser.add_argument('-g', '--gpu', type=bool, 
+    default = True, 
+    help = 'If GPU is available, indicates that it should be used')
 
 
 args = parser.parse_args()
@@ -142,39 +150,206 @@ classifier.add_module('output', nn.Linear(nodes[-1], 102))
 classifier.add_module('activation_output', nn.LogSoftmax(dim=1))
 
 
-if arch == 'inception':
+if args.arch == 'inception':
     model.fc = classifier
+    model_params = model.fc.parameters()
 
-elif arch == 'densenet':
+elif args.arch == 'densenet':
     model.classifier = classifier
+    model_params = model.classifier.parameters()
 
 
 # -------------------- START EPOCHS --------------------
 
+# If GPU is enabled, set device = 'cuda'. Otherwise use CPU
+device_to_use = "cuda:0" if torch.cuda.is_available() and args.gpu else "cpu"
+device = torch.device(device_to_use)
+model.to(device)
 
+# Good loss function to use for LogSoftMax activation layer
+criterion = nn.NLLLoss()
+
+# Only train the classifier parameters, feature parameters are frozen
+optimizer = optim.Adam(model_params, lr=args.learning_rate)
+
+t0 = time()
+
+# Prep for saving the best epoch's model weights
+# Code for this adapted from https://medium.com/datadriveninvestor/creating-a-pytorch-image-classifier-da9db139ba80
+from copy import deepcopy
+
+best = {'acc': 0.0, 'epoch': 0, 'weights': deepcopy(model.state_dict())}
+epochs = args.epochs
+
+# Used to keep the Udacity online workspace from 
+# disconnecting/going to sleep
+from workspace_utils import keep_awake
+
+# Keep GPU session awake until done training
+for e in keep_awake(range(epochs)):
 
     # -------------------- TRAINING --------------------
 
+    # Make sure model is in training mode
+    model.train()
 
+    training_loss = 0
+    training_batch_counter = 0
+    
+    for images, labels in dataloaders['train']:
+
+        # Move input and label tensors to the GPU or CPU
+        images, labels = images.to(device), labels.to(device)
+        
+        optimizer.zero_grad()
+
+        outputs = model(images)
+
+        if args.arch == 'inception': 
+            loss = criterion(outputs.logits, labels)
+        
+        elif args.arch == 'densenet':
+            loss = criterion(outputs, labels)
+        
+        loss.backward()
+        optimizer.step()
+        
+        training_loss += loss.item()
+        
+        # Monitor every 10 batches and final batch
+        if training_batch_counter % 10 == 0 or \
+        training_batch_counter == (len(dataloaders['train']) - 1):
+            print(f"Training batch {training_batch_counter}\nLoss = \
+            {training_loss/(training_batch_counter + 1)}\n")
+            
+        training_batch_counter += 1
 
 
     # -------------------- VALIDATION --------------------
 
+    # turn off gradients for speedup in validation
+    with torch.no_grad():
 
+        # set model to evaluation mode and remove un-needed things like Dropout layers
+        model.eval()
+      
+        accuracy = 0
+        valid_loss = 0
+        val_batch_counter = 0
+        
+        for images, labels in dataloaders['validation']:
+            # Move input and label tensors to the GPU or CPU
+            images, labels = images.to(device), labels.to(device)
+            
+            outputs = model(images)
+            loss = criterion(outputs, labels)
+            probs = torch.exp(outputs)
 
+            _, top_class = probs.topk(1, dim = 1)
+            equals = top_class == labels.view(*top_class.shape)
+            
+            valid_loss += loss.item()
+            accuracy += torch.mean(equals.type(torch.FloatTensor)).item()
+            
+            # Monitor every 3 batches and final batch
+            if val_batch_counter % 3 == 0 or \
+            val_batch_counter == (len(dataloaders['validation']) - 1):
+                print(f"Validation batch {val_batch_counter}\nLoss = \
+                      {valid_loss/(val_batch_counter + 1)}\n and \
+                      accuracy = {accuracy/(val_batch_counter + 1)}\n")
+            
+            val_batch_counter += 1
+
+    # -------------------- EPOCH REPORTING --------------------
+
+    # Note that normalizing to train/validloader length is due to 
+    # need to divide by batch size to effectively average the 
+    # quantity in question
+    training_loss /= len(dataloaders['train'])
+    valid_loss /= len(dataloaders['validation'])
+    accuracy /= len(dataloaders['validation'])
+    
+    print(f"For epoch {e+1}/{epochs}...")
+    print(f"{round((time()-t0)/60, 3)} minutes since training started")
+    print(f"Training loss = {training_loss}")
+    print(f"Validation loss = {valid_loss}")
+    print(f"Accuracy = {accuracy}\n\n")
+    
+    # Update best accuracy and weights if new superior model is found
+    if accuracy > best['acc']:
+        best['acc'] = accuracy
+        best['epoch'] = e+1
+        best['weights'] = deepcopy(model.state_dict())
+        
+        print("Best accuracy updated this epoch to {}\n\n\n".format(best['acc']))
 
 
 # -------------------- END EPOCHS --------------------
 
+print("Best accuracy found was {} in epoch {}".format(best['acc'],
+                                                     best['epoch']))
 
+# Set model weights to the optimal ones found across all epochs
+# NOTE: you may get an error 
+# IncompatibleKeys(missing_keys=[], unexpected_keys=[])
+# This error can be ignored. Model weights were still set properly.
+model.load_state_dict(best['weights'])
 
 
 
 # -------------------- TESTING --------------------
 
+# turn off gradients for speedup in testing
+with torch.no_grad():
+
+    # set model to evaluation mode and remove 
+    # un-needed things like Dropout layers
+    model.eval()
+
+    test_accuracy = 0
+    test_loss = 0
+
+    for images, labels in dataloaders['test']:
+        # Move input and label tensors to the GPU or CPU
+        images, labels = images.to(device), labels.to(device)
+
+        outputs = model(images)
+        loss = criterion(outputs, labels)
+        probs = torch.exp(outputs)
+
+        _, top_class = probs.topk(1, dim = 1)
+        equals = top_class == labels.view(*top_class.shape)
+
+        test_loss += loss.item()
+        test_accuracy += torch.mean(equals.type(torch.FloatTensor)).item()
+
+
+
+# Note that normalizing to train/validloader length is due to need to 
+# divide by batch size to effectively average the quantity in question
+print(f"Testing loss = {test_loss/len(dataloaders['test'])}")
+print(f"Testing accuracy = {test_accuracy/len(dataloaders['test'])}\n\n")
 
 
 # -------------------- SAVING THE MODEL --------------------
 
+# Note that class_to_idx provides the mapping of my folder names to the 
+# index used in the model
+if args.arch == 'inception':
+    model_arch = models.inception_v3(pretrained=True)
+
+elif args.arch == 'densenet':
+    model_arch = models.densenet161(pretrained=True)
+
+checkpoint = {'arch': model_arch,
+              'model_state': model.state_dict(),
+              'epoch_count': best['epoch'],
+              'training_loss': training_loss,
+              'validation_loss': valid_loss,
+              'opt_state': optimizer.state_dict(),
+              'class_to_idx': data['train'].class_to_idx,
+              'idx_to_class': {v: k for k,v in data['train'].class_to_idx.items()}}
+
+torch.save(checkpoint, args.save_dir)
 
 
