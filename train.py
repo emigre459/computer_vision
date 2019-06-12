@@ -193,8 +193,12 @@ epochs = args.epochs
 # disconnecting/going to sleep
 from workspace_utils import keep_awake
 
-# Keep GPU session awake until done training
-for e in keep_awake(range(epochs)):
+# Keep GPU session awake in Udacity workspace until done training
+#epoch_iter = keep_awake(range(epochs))
+epoch_iter = range(epochs)
+
+
+for e in epoch_iter:
 
     # -------------------- TRAINING --------------------
 
@@ -229,6 +233,7 @@ for e in keep_awake(range(epochs)):
         training_batch_counter == (len(dataloaders['train']) - 1):
             print(f"Training batch {training_batch_counter}\nLoss = \
             {training_loss/(training_batch_counter + 1)}\n")
+            break
             
         training_batch_counter += 1
 
@@ -265,6 +270,7 @@ for e in keep_awake(range(epochs)):
                 print(f"Validation batch {val_batch_counter}\nLoss = \
                       {valid_loss/(val_batch_counter + 1)}\n and \
                       accuracy = {accuracy/(val_batch_counter + 1)}\n")
+                break
             
             val_batch_counter += 1
 
@@ -290,7 +296,7 @@ for e in keep_awake(range(epochs)):
         best['weights'] = deepcopy(model.state_dict())
         
         print("Best accuracy updated this epoch to {}\n\n\n".format(best['acc']))
-
+    break
 
 # -------------------- END EPOCHS --------------------
 
@@ -330,6 +336,7 @@ with torch.no_grad():
 
         test_loss += loss.item()
         test_accuracy += torch.mean(equals.type(torch.FloatTensor)).item()
+        break
 
 
 
@@ -358,6 +365,37 @@ checkpoint = {'arch': model_arch,
               'class_to_idx': data['train'].class_to_idx,
               'idx_to_class': {v: k for k,v in data['train'].class_to_idx.items()}}
 
-torch.save(checkpoint, args.save_dir)
+
+# Determine the highest number X among the existing checkpoints
+# which are assumed to have filenames of the format checkpointX.pth
+
+# Code adapted from 
+# https://stackoverflow.com/questions/3207219/how-do-i-list-all-files-of-a-directory
+
+from os import listdir
+from os.path import isfile, join
+
+existing_chkpts = [f for f in listdir(args.save_dir) \
+                   if isfile(join(args.save_dir, f))]
+
+# Code adapted from 
+# https://stackoverflow.com/questions/4666973/how-to-extract-the-substring-between-two-markers
+
+# Take list of existing checkpoint filenames and generate string "checkpointn+1"
+# where n is the highest value used for checkpoint filenames
+# Guarantees we won't overwrite an existing checkpoint
+import re
+
+file_indices = []
+
+for e in existing_chkpts:
+    m = re.search('checkpoint(.+).pth', e)
+    if m:
+        file_indices.append(int(m.group(1)))
+
+file_n = max(file_indices)
+
+save_path = args.save_dir + 'checkpoint' + str(file_n) + '.pth'
+torch.save(checkpoint, save_path)
 
 
