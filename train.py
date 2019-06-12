@@ -15,8 +15,9 @@ from torchvision import datasets, transforms, models
 # Setup major inputs required from command line
 parser = argparse.ArgumentParser(description='Trains a neural network')
 parser.add_argument('data_directory', type=str, 
-    help='Filepath for input data. Expected to be the parent directory with \
-    folders train, validation, and test inside, with each structured \
+    help='Filepath for input data of format "data_dir/". \
+    Expected to be the parent directory with \
+    folders "train", "validation", and "test" inside, with each structured \
     according to torchivision.datasets.ImageFolder requirements')
 
 # Setup optional parameters that can be entered from the command line
@@ -34,12 +35,13 @@ parser.add_argument('-l', '--learning_rate', type=float,
     default = 0.0005, 
     help = 'Learning rate to use for the Adam optimizer')
 
-parser.add_argument('-u', '--hidden_units', type=list, 
+parser.add_argument('-u', '--hidden_units', nargs='+', type=int,
     default = [512, 256], 
     help = 'Number of nodes to use in each hidden layer, ordered from \
     earliest to latest layer. Not inclusive of the input layer \
     (node count dictated by model architecture chosen) and \
-    output layer (always 102 = number of flower labels)')
+    output layer (always 102 = number of flower labels). \
+    Note that usage is --hidden_units count1 count2 count3...')
 
 parser.add_argument('-d', '--dropout', type=bool, 
     default = True, 
@@ -56,6 +58,7 @@ parser.add_argument('-g', '--gpu', type=bool,
 
 
 args = parser.parse_args()
+
 
 
 # -------------------- ARCHITECTURE-SPECIFIC SETUP --------------------
@@ -93,7 +96,7 @@ for param in model.parameters():
 means = [0.485, 0.456, 0.406]
 stdevs = [0.229, 0.224, 0.225]
 
-data_dir = 'data/'
+data_dir = args.data_directory
 
 # Code here adapted from https://pytorch.org/tutorials/beginner/transfer_learning_tutorial.html
 
@@ -106,7 +109,7 @@ image_transforms = {'train': transforms.Compose([transforms.RandomResizedCrop(cr
     transforms.RandomVerticalFlip(),
     transforms.ToTensor(),
     transforms.Normalize(means, stdevs)]),
-'validation': transforms.Compose([transforms.Resize(512),
+'valid': transforms.Compose([transforms.Resize(512),
     transforms.CenterCrop(crop_size),
     transforms.ToTensor(),
     transforms.Normalize(means, stdevs)]),
@@ -116,7 +119,7 @@ image_transforms = {'train': transforms.Compose([transforms.RandomResizedCrop(cr
     transforms.Normalize(means, stdevs)])
 }
 
-phases = ['train', 'validation', 'test']
+phases = ['train', 'valid', 'test']
 
 data = {phase: datasets.ImageFolder(os.path.join(data_dir, phase),
     image_transforms[phase]) for phase in phases}
@@ -125,7 +128,7 @@ dataloaders = {phase: torch.utils.data.DataLoader(data[phase],
     batch_size=64) for phase in phases}
 
 # Set training dataloader to have shuffle = True
-dataloaders['train'] = torch.utils.data.DataLoader(data[phase], 
+dataloaders['train'] = torch.utils.data.DataLoader(data['train'], 
     batch_size=64, shuffle = True)
 
 
@@ -153,10 +156,15 @@ classifier.add_module('activation_output', nn.LogSoftmax(dim=1))
 if args.arch == 'inception':
     model.fc = classifier
     model_params = model.fc.parameters()
+    print(f"Classifier architecture:")
+    print(model.fc)
 
 elif args.arch == 'densenet':
     model.classifier = classifier
     model_params = model.classifier.parameters()
+    print(f"Classifier architecture:")
+    print(model.classifier)
+
 
 
 # -------------------- START EPOCHS --------------------
@@ -237,7 +245,7 @@ for e in keep_awake(range(epochs)):
         valid_loss = 0
         val_batch_counter = 0
         
-        for images, labels in dataloaders['validation']:
+        for images, labels in dataloaders['valid']:
             # Move input and label tensors to the GPU or CPU
             images, labels = images.to(device), labels.to(device)
             
@@ -253,7 +261,7 @@ for e in keep_awake(range(epochs)):
             
             # Monitor every 3 batches and final batch
             if val_batch_counter % 3 == 0 or \
-            val_batch_counter == (len(dataloaders['validation']) - 1):
+            val_batch_counter == (len(dataloaders['valid']) - 1):
                 print(f"Validation batch {val_batch_counter}\nLoss = \
                       {valid_loss/(val_batch_counter + 1)}\n and \
                       accuracy = {accuracy/(val_batch_counter + 1)}\n")
@@ -266,8 +274,8 @@ for e in keep_awake(range(epochs)):
     # need to divide by batch size to effectively average the 
     # quantity in question
     training_loss /= len(dataloaders['train'])
-    valid_loss /= len(dataloaders['validation'])
-    accuracy /= len(dataloaders['validation'])
+    valid_loss /= len(dataloaders['valid'])
+    accuracy /= len(dataloaders['valid'])
     
     print(f"For epoch {e+1}/{epochs}...")
     print(f"{round((time()-t0)/60, 3)} minutes since training started")
