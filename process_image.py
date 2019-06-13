@@ -4,6 +4,7 @@ Processes images for use in inference via an artificial neural network
 
 import numpy as np
 from PIL import Image
+import torch
 
 def calculate_resize(image, goal_size):
     '''
