@@ -33,21 +33,20 @@ parser.add_argument('checkpoint_filepath', type=str,
 
 
 # Setup optional parameters that can be entered from the command line
-parser.add_argument('-t', '--top_k', type=int, 
+parser.add_argument('-t', '--top_k', type=int, metavar='',
     default = 1, 
     help = 'Number of classes to return as inferences of the flower name. \
     Returned names are ordered from most probable/certain to least')
 
-parser.add_argument('-g', '--gpu', type=bool, 
+parser.add_argument('-g', '--gpu', type=bool, metavar='',
     default = True, 
     help = 'If GPU is available, indicates that it should be used')
 
-parser.add_argument('-c', '--category_names', type=str, 
-    default = 'cat_to_name.json', 
+parser.add_argument('-c', '--category_names', type=str, metavar='',
     help = 'Filepath of JSON file that defines the mapping from\
      folder name (usually an integer) to actual flower name')
 
-parser.add_argument('-d', '--display', type=bool, 
+parser.add_argument('-d', '--display', type=bool, metavar='',
     default = False, 
     help = 'If True, displays input image with its ground truth \
     flower name as well as the top_k classes predicted as the \
@@ -125,4 +124,7 @@ top_idx = list(top_idx.numpy()[0])
 
 # Translate model label indices to image folder labels
 top_classes = [model.idx_to_class[idx] for idx in top_idx]
-print(f"Top class predicted is {top_classes[0]} with probability {top_ps[0]}")
+print(f"Top classes predicted, in order, are {top_classes}\
+ with probabilities {top_ps}")
+
+

@@ -1,3 +1,8 @@
+'''
+Trains a convolutional neural network, using a pre-trained ImageNet model,
+to infer the name of a flower given its image.
+'''
+
 # -------------------- IMPORT PACKAGES --------------------
 
 import argparse
@@ -21,22 +26,22 @@ parser.add_argument('data_directory', type=str,
     according to torchivision.datasets.ImageFolder requirements')
 
 # Setup optional parameters that can be entered from the command line
-parser.add_argument('-s', '--save_dir', type=str, 
+parser.add_argument('-s', '--save_dir', type=str, metavar='', 
     default = 'model_checkpoints/', 
     help = 'Filepath indicating where trained model checkpoint files \
     should be stored')
 
-parser.add_argument('-a', '--arch', type=str, 
+parser.add_argument('-a', '--arch', type=str, metavar='',
     default = 'inception', 
     help = 'Pre-trained model from torchivision.models to use \
     for the feature detector layers of your model')
 
 parser.add_argument('-l', '--learning_rate', type=float, 
-    default = 0.0005, 
+    default = 0.0005, metavar='', 
     help = 'Learning rate to use for the Adam optimizer')
 
 parser.add_argument('-u', '--hidden_units', nargs='+', type=int,
-    default = [512, 256], 
+    default = [512, 256], metavar='', 
     help = 'Number of nodes to use in each hidden layer, ordered from \
     earliest to latest layer. Not inclusive of the input layer \
     (node count dictated by model architecture chosen) and \
@@ -44,20 +49,20 @@ parser.add_argument('-u', '--hidden_units', nargs='+', type=int,
     Note that usage is --hidden_units count1 count2 count3...')
 
 parser.add_argument('-d', '--dropout', type=bool, 
-    default = True, 
+    default = True, metavar='', 
     help = 'Determines if dropout with p=0.2 will be used for \
     each hidden layer')
 
 parser.add_argument('-e', '--epochs', type=int, 
-    default = 30, 
+    default = 30, metavar='', 
     help = 'Number of epochs to use for training and validation')
 
 parser.add_argument('-g', '--gpu', type=bool, 
-    default = True, 
+    default = True, metavar='', 
     help = 'If GPU is available, indicates that it should be used')
 
 parser.add_argument('-t', '--quick_test', type=bool, 
-    default = False, 
+    default = False, metavar='', 
     help = 'If you just want to test the base code functionality quickly, \
     set this to True. Will only load first batch for all training \
     and testing.')

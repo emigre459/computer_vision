@@ -10,7 +10,7 @@ parser.add_argument('input_filename', type=str,
     name will be predicted')
 
 # Setup optional parameters that can be entered from the command line
-parser.add_argument('-s', '--save_dir', type=str, 
+parser.add_argument('-s', '--save_dir', type=str, metavar='',
     default = 'model_checkpoints/', 
     help = 'Filepath indicating where trained model checkpoint files \
     are stored')
