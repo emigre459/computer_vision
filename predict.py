@@ -17,7 +17,7 @@ parser.add_argument('input_filepath', type=str,
     help='Filepath for input image for which the flower \
     name will be predicted')
 
-parser.add_argument('checkpoint', type=str, 
+parser.add_argument('checkpoint_filepath', type=str, 
     help='Filepath of the checkpoint.pth file to be used for \
     loading up a trained model to use for inference')
 
@@ -36,5 +36,29 @@ parser.add_argument('-c', '--category_names', type=str,
 parser.add_argument('-g', '--gpu', type=bool, 
     default = True, 
     help = 'If GPU is available, indicates that it should be used')
+
+
+args = parser.parse_args()
+
+
+# -------------------- LOAD MODEL FROM CHECKPOINT --------------------
+
+# If GPU is enabled, set device = 'cuda'. Otherwise use CPU
+if torch.cuda.is_available() and args.gpu:
+    device = torch.device("cuda:0")
+
+elif args.gpu and not torch.cuda.is_available():
+    print("GPU unavailable, using CPU\n")
+    device = torch.device("cpu")
+
+else:
+    device = torch.device("cpu")
+
+checkpoint = torch.load(args.checkpoint_filepath, map_location=device)
+
+# Can be Inception3 or DenseNet based on options in train.py
+model_name = checkpoint['arch'].__class__.__name__
+
+#TODO: model name should dictate how you load in the classifier + arch
 
 

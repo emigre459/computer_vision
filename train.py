@@ -309,6 +309,7 @@ for e in epoch_iter:
         print("Best accuracy updated this epoch \
             to {}\n\n\n".format(best['acc']))
 
+
 # -------------------- END EPOCHS --------------------
 
 print("Best accuracy found was {} in epoch {}".format(best['acc'],
@@ -351,8 +352,11 @@ with torch.no_grad():
 
 # Note that normalizing to train/validloader length is due to need to 
 # divide by batch size to effectively average the quantity in question
-print(f"Testing loss = {test_loss/len(dataloaders['test'])}")
-print(f"Testing accuracy = {test_accuracy/len(dataloaders['test'])}\n\n")
+test_loss /= len(dataloaders['test'])
+test_accuracy /= len(dataloaders['test'])
+
+print(f"Testing loss = {test_loss}")
+print(f"Testing accuracy = {test_accuracy}\n\n")
 
 
 # -------------------- SAVING THE MODEL --------------------
@@ -369,7 +373,9 @@ checkpoint = {'arch': model_arch,
               'model_state': model.state_dict(),
               'epoch_count': best['epoch'],
               'training_loss': training_loss,
-              'validation_loss': valid_loss,
+              'validation_accuracy': best['acc'],
+              'test_loss': test_loss,
+              'test_accuracy': test_accuracy,
               'opt_state': optimizer.state_dict(),
               'class_to_idx': data['train'].class_to_idx,
               'idx_to_class': {v: k for k,v \
@@ -410,5 +416,5 @@ if file_indices:
 else:
     file_n = 0
 
-save_path = args.save_dir + 'checkpoint' + str(file_n) + '.pth'
+save_path = args.save_dir + 'checkpoint' + str(file_n+1) + '.pth'
 torch.save(checkpoint, save_path)
