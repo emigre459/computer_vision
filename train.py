@@ -1,8 +1,3 @@
-'''
-Trains an artificial neural network to recognize different types of flowers
- based on their images
-'''
-
 # -------------------- IMPORT PACKAGES --------------------
 
 import argparse
@@ -217,8 +212,8 @@ epochs = args.epochs
 from workspace_utils import keep_awake
 
 # Keep GPU session awake in Udacity workspace until done training
-#epoch_iter = keep_awake(range(epochs))
-epoch_iter = range(epochs)
+epoch_iter = keep_awake(range(epochs))
+#epoch_iter = range(epochs)
 
 
 for e in epoch_iter:

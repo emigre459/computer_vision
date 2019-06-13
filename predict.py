@@ -12,6 +12,9 @@ from torch import nn
 from torch import optim
 from torchvision import datasets, transforms, models
 
+from process_image import process_image
+
+import matplotlib.pyplot as plt
 
 # -------------------- SETUP MAJOR INPUT VALUES --------------------
 
