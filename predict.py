@@ -1,3 +1,9 @@
+'''
+Infers the name of a flower from an image supplied to it
+by utilizing a pre-trained artificial neural network
+'''
+
+
 # -------------------- IMPORT PACKAGES --------------------
 import argparse
 
@@ -37,6 +43,12 @@ parser.add_argument('-g', '--gpu', type=bool,
     default = True, 
     help = 'If GPU is available, indicates that it should be used')
 
+parser.add_argument('-d', '--display', type=bool, 
+    default = False, 
+    help = 'If True, displays input image with its ground truth \
+    flower name as well as the top_k classes predicted as the \
+    flower name, with the latter displayed as a bar chart')
+
 
 args = parser.parse_args()
 
@@ -57,6 +69,10 @@ else:
 checkpoint = torch.load(args.checkpoint_filepath, map_location=device)
 
 model = checkpoint['arch']
+# Freeze parameters so we can't backprop through the 
+# pre-trained feature detector
+for param in model.parameters():
+    param.requires_grad = False
 
 # Can be Inception3 or DenseNet based on options in train.py
 model_name = model.__class__.__name__
@@ -67,4 +83,12 @@ if model_name == 'Inception3':
 
 elif model_name == 'DenseNet':
     model.classifier = checkpoint['classifier']
+
+# Load weights, biases, and other attributes
+model.load_state_dict(checkpoint['model_state'])
+model.class_to_idx = checkpoint['class_to_idx']
+model.idx_to_class = checkpoint['idx_to_class']
+
+model.eval()
+
 

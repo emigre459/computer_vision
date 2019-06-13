@@ -1,3 +1,8 @@
+'''
+Trains an artificial neural network to recognize different types of flowers
+ based on their images
+'''
+
 # -------------------- IMPORT PACKAGES --------------------
 
 import argparse
