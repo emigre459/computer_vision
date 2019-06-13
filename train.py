@@ -56,6 +56,12 @@ parser.add_argument('-g', '--gpu', type=bool,
     default = True, 
     help = 'If GPU is available, indicates that it should be used')
 
+parser.add_argument('-t', '--quick_test', type=bool, 
+    default = False, 
+    help = 'If you just want to test the base code functionality quickly, \
+    set this to True. Will only load first batch for all training \
+    and testing.')
+
 
 args = parser.parse_args()
 
@@ -177,7 +183,7 @@ if torch.cuda.is_available() and args.gpu:
     device = torch.device("cuda:0")
 
 elif args.gpu and not torch.cuda.is_available():
-    print("GPU unavailable, using CPU\n")
+    print("\nGPU unavailable, using CPU\n")
     device = torch.device("cpu")
 
 else:
@@ -247,6 +253,7 @@ for e in epoch_iter:
             {training_loss/(training_batch_counter + 1)}\n")
             
         training_batch_counter += 1
+        if args.quick_test: break
 
 
     # -------------------- VALIDATION --------------------
@@ -284,6 +291,7 @@ for e in epoch_iter:
                       accuracy = {accuracy/(val_batch_counter + 1)}\n")
             
             val_batch_counter += 1
+            if args.quick_test: break
 
     # -------------------- EPOCH REPORTING --------------------
 
@@ -309,6 +317,7 @@ for e in epoch_iter:
         print("Best accuracy updated this epoch \
             to {}\n\n\n".format(best['acc']))
 
+    if args.quick_test: break
 
 # -------------------- END EPOCHS --------------------
 
@@ -348,6 +357,8 @@ with torch.no_grad():
 
         test_loss += loss.item()
         test_accuracy += torch.mean(equals.type(torch.FloatTensor)).item()
+
+        if args.quick_test: break
 
 
 # Note that normalizing to train/validloader length is due to need to 
@@ -414,9 +425,9 @@ for e in existing_chkpts:
 
 # Check that there are any files of proper name scheme in there at all
 if file_indices:
-    file_n = max(file_indices)
+    file_n = max(file_indices) + 1
 else:
     file_n = 0
 
-save_path = args.save_dir + 'checkpoint' + str(file_n+1) + '.pth'
+save_path = args.save_dir + 'checkpoint' + str(file_n) + '.pth'
 torch.save(checkpoint, save_path)
