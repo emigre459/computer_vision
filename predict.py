@@ -127,4 +127,33 @@ top_classes = [model.idx_to_class[idx] for idx in top_idx]
 print(f"Top classes predicted, in order, are {top_classes}\
  with probabilities {top_ps}")
 
-
+# Display flower image with its actual name as title and 
+# top_k predicted classes with bar chart showing their 
+# probabilities
+if args.display:
+    # Open the virgin image
+    image = Image.open(img_path)
+    
+    # preprocess image for inference
+    processed_image = torch.Tensor(process_image(image))
+    
+    # NOTE: much of the plotting code is adapted from 
+    # https://medium.com/@rayheberer/generating-matplotlib-subplots-programmatically-cc234629b648
+    
+    # Setup the multi-object Figure
+    fig, (ax1, ax2) = plt.subplots(figsize = (4,8), ncols=1, nrows=2)
+    fig.suptitle('What flower is that, anyways?')
+    
+    # Setup the processed flower image + label title
+    flower_name = class_names[img_path.split('/')[-2]]
+    ax1.set(title=flower_name)
+    imshow(processed_image, ax = ax1)
+    ax1.axis('off')
+    
+    # Predictions
+    probs, classes = predict(img_path, model, device = 'cpu')
+    predicted_names = [cat_to_name[name] for name in classes]
+    
+    # Setup the probability bar chart
+    sns.barplot(x = probs, y = predicted_names, orient = 'h', ax = ax2, color = 'limegreen')
+    ax2.set(title='Educated Guesses', xlabel='Probability')
