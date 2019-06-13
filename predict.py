@@ -56,9 +56,15 @@ else:
 
 checkpoint = torch.load(args.checkpoint_filepath, map_location=device)
 
+model = checkpoint['arch']
+
 # Can be Inception3 or DenseNet based on options in train.py
-model_name = checkpoint['arch'].__class__.__name__
+model_name = model.__class__.__name__
 
-#TODO: model name should dictate how you load in the classifier + arch
+# Use model name to dictate how you setup classifier
+if model_name == 'Inception3':
+    model.fc = checkpoint['classifier']
 
+elif model_name == 'DenseNet':
+    model.classifier = checkpoint['classifier']
 

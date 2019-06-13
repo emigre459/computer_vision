@@ -38,3 +38,5 @@ print(f"Checkpoint: {args.input_filename}")
 print(f"Model: {model_name}")
 print(f"Best validation accuracy of {val_acc} found at epoch {epoch}")
 print(f"Test accuracy of model is {test_acc}")
+
+print(f"Fields in checkpoint include:\n\n{checkpoint.keys()}")

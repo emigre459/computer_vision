@@ -369,17 +369,19 @@ if args.arch == 'inception':
 elif args.arch == 'densenet':
     model_arch = models.densenet161(pretrained=True)
 
-checkpoint = {'arch': model_arch,
-              'model_state': model.state_dict(),
-              'epoch_count': best['epoch'],
-              'training_loss': training_loss,
-              'validation_accuracy': best['acc'],
-              'test_loss': test_loss,
-              'test_accuracy': test_accuracy,
-              'opt_state': optimizer.state_dict(),
-              'class_to_idx': data['train'].class_to_idx,
-              'idx_to_class': {v: k for k,v \
-              in data['train'].class_to_idx.items()}}
+checkpoint = {
+'arch': model_arch,
+'classifier': classifier,
+'model_state': model.state_dict(),
+'epoch_count': best['epoch'],
+'training_loss': training_loss,
+'validation_accuracy': best['acc'],
+'test_loss': test_loss,
+'test_accuracy': test_accuracy,
+'opt_state': optimizer.state_dict(),
+'class_to_idx': data['train'].class_to_idx,
+'idx_to_class': {v: k for k,v \
+in data['train'].class_to_idx.items()}}
 
 
 # Determine the highest number X among the existing checkpoints
