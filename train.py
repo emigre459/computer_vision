@@ -173,8 +173,17 @@ elif args.arch == 'densenet':
 # -------------------- START EPOCHS --------------------
 
 # If GPU is enabled, set device = 'cuda'. Otherwise use CPU
-device_to_use = "cuda:0" if torch.cuda.is_available() and args.gpu else "cpu"
-device = torch.device(device_to_use)
+if torch.cuda.is_available() and args.gpu:
+    device = torch.device("cuda:0")
+
+elif args.gpu and not torch.cuda.is_available():
+    print("GPU unavailable, using CPU\n")
+    device = torch.device("cpu")
+
+else:
+    device = torch.device("cpu")
+
+
 model.to(device)
 
 # Good loss function to use for LogSoftMax activation layer
@@ -403,5 +412,3 @@ else:
 
 save_path = args.save_dir + 'checkpoint' + str(file_n) + '.pth'
 torch.save(checkpoint, save_path)
-
-
