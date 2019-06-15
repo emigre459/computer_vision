@@ -4,4 +4,4 @@ Project code for Udacity's AI Programming with Python Nanodegree program. In thi
 
 # Pre-Trained Model
 
-The model used in this repo was trained on a Udacity-provided GPU-enabled workspace and the resulting checkpoint file that contains the model itself is too large to be uploaded to GitHub. As such, you can [download it here](https://www.dropbox.com/s/hkj6ir2s385yztg/flowers_checkpoint.pth?dl=0).
+The best model used in this repo was trained on a Udacity-provided GPU-enabled workspace and the resulting checkpoint file that contains the model itself is too large to be uploaded to GitHub. As such, you can [download it here](https://www.dropbox.com/s/rnrbw744m8gzzm2/flowers_checkpoint.pth?dl=0).
