@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 def imshow(image, ax=None, title=None):
     """Imshow for Tensor. Provided by Udacity as part of this project."""

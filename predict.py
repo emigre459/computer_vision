@@ -15,8 +15,6 @@ from torchvision import datasets, transforms, models
 from process_image import process_image
 from PIL import Image
 
-import matplotlib.pyplot as plt
-
 # -------------------- SETUP MAJOR INPUT VALUES --------------------
 
 parser = argparse.ArgumentParser(description="Predicts a flower's name, \
@@ -146,26 +144,36 @@ print(f"Top classes predicted, in order, are {top_classes}\
 if args.display:
 
     from imshow import imshow
+    import matplotlib.pyplot as plt
+    import seaborn as sns
     
     # NOTE: much of the plotting code is adapted from 
     # https://medium.com/@rayheberer/generating-matplotlib-subplots-programmatically-cc234629b648
     
     # Setup the multi-object Figure
-    fig, (ax1, ax2) = plt.subplots(figsize = (4,8), ncols=1, nrows=2)
+    fig, (ax1, ax2) = plt.subplots(figsize = (15,6), ncols=1, nrows=2)
     fig.suptitle('What flower is that, anyways?')
     
+    img_path = args.input_filepath
+
     # Setup the processed flower image + label title
-    flower_name = class_names[img_path.split('/')[-2]]
+    # Use class folder name as flower name unless category_names is passed
+    flower_name = cat_to_name[img_path.split('/')[-2]] if \
+    args.category_names else img_path.split('/')[-2]
+
     ax1.set(title=flower_name)
 
     #TODO: will it be a problem that processed image is unsqueezed?
     imshow(processed_image, ax = ax1)
     ax1.axis('off')
     
-    # Predictions
-    probs, classes = predict(img_path, model, device = 'cpu')
-    predicted_names = [cat_to_name[name] for name in classes]
-    
+
     # Setup the probability bar chart
-    sns.barplot(x = probs, y = predicted_names, orient = 'h', ax = ax2, color = 'limegreen')
+    sns.barplot(x = top_ps, y = top_classes, orient = 'h', ax = ax2, 
+        color = 'limegreen')
+
+    ax2.invert_yaxis()
     ax2.set(title='Educated Guesses', xlabel='Probability')
+
+    #print()
+    plt.show()
