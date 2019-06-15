@@ -43,8 +43,9 @@ parser.add_argument('-g', '--gpu', type=bool, metavar='',
     help = 'If GPU is available, indicates that it should be used')
 
 parser.add_argument('-c', '--category_names', type=str, metavar='',
+    default=None,
     help = 'Filepath of JSON file that defines the mapping from\
-     folder name (usually an integer) to actual flower name')
+     folder name (usually an integer as str) to actual flower name')
 
 parser.add_argument('-d', '--display', type=bool, metavar='',
     default = False, 
@@ -124,6 +125,18 @@ top_idx = list(top_idx.numpy()[0])
 
 # Translate model label indices to image folder labels
 top_classes = [model.idx_to_class[idx] for idx in top_idx]
+
+# top classes are folder labels, unless a JSON mapping is passed
+# to category_names
+if args.category_names:
+    import json
+
+    with open(args.category_names, 'r') as f:
+        cat_to_name = json.load(f)
+
+    top_classes = [cat_to_name[name] for name in top_classes]
+
+
 print(f"Top classes predicted, in order, are {top_classes}\
  with probabilities {top_ps}")
 
@@ -131,11 +144,8 @@ print(f"Top classes predicted, in order, are {top_classes}\
 # top_k predicted classes with bar chart showing their 
 # probabilities
 if args.display:
-    # Open the virgin image
-    image = Image.open(img_path)
-    
-    # preprocess image for inference
-    processed_image = torch.Tensor(process_image(image))
+
+    from imshow import imshow
     
     # NOTE: much of the plotting code is adapted from 
     # https://medium.com/@rayheberer/generating-matplotlib-subplots-programmatically-cc234629b648
@@ -147,6 +157,8 @@ if args.display:
     # Setup the processed flower image + label title
     flower_name = class_names[img_path.split('/')[-2]]
     ax1.set(title=flower_name)
+
+    #TODO: will it be a problem that processed image is unsqueezed?
     imshow(processed_image, ax = ax1)
     ax1.axis('off')
     
