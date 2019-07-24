@@ -1,6 +1,6 @@
 # Computer Vision via Transfer Learning - Flower Species Identification
 
-In this project, I developed code for an image classifier (starting with the pre-trained Inception v3 and DenseNet 161 models) built with PyTorch, then convert it into a command line application.
+In this project, I developed code for an image classifier (starting with the pre-trained Inception v3 and DenseNet 161 models) built with PyTorch, then converted it into a command line application.
 
 The models were trained using 8,500 pre-labeled images of 102 different flower species provided as part of this project by Udacity.com.
 
